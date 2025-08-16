@@ -2,255 +2,248 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>UNO Game</title>
+  <title>UNO Simple Game</title>
   <style>
     body {
-      font-family: 'Arial Black', Arial, sans-serif;
+      background: #39c7fa;
+      font-family: sans-serif;
       text-align: center;
-      background: linear-gradient(135deg, #1a1a1a, #222, #111);
-      color: white;
-      margin: 0;
-      padding: 20px;
     }
-
-    h1 {
-      font-size: 40px;
-      letter-spacing: 3px;
-      color: #fefefe;
-      text-shadow: 2px 2px 8px #000;
-    }
-
     #game {
-      margin-top: 20px;
-    }
-
-    .card {
-      display: inline-block;
-      padding: 20px 20px;
-      margin: 6px;
-      border-radius: 10px;
-      font-weight: bold;
-      font-size: 20px;
-      cursor: pointer;
-      border: 2px solid white;
-      width: 60px;
-      height: 90px;
-      line-height: 50px;
-      vertical-align: middle;
-      text-align: center;
-      transition: transform 0.2s;
-    }
-
-    .card:hover {
-      transform: translateY(-5px);
-    }
-
-    .red { background: #e74c3c; }
-    .yellow { background: #f1c40f; color: black; }
-    .green { background: #2ecc71; }
-    .blue { background: #3498db; }
-    .black { background: black; color: white; }
-
-    #playerHand, #computerHand {
-      margin: 20px;
-      padding: 10px;
-      border: 2px solid #444;
-      border-radius: 10px;
-      background: rgba(255,255,255,0.05);
-    }
-
-    #discardPile {
       margin: 20px auto;
-      padding: 20px;
-      border: 3px dashed #fff;
-      display: inline-block;
-      min-width: 100px;
-      min-height: 120px;
-      border-radius: 10px;
+      padding: 16px;
+      background: #fff272;
+      width: 560px;
+      border-radius: 20px;
+      box-shadow: 0px 8px 32px #2075aa99;
     }
-
-    button {
-      padding: 10px 20px;
-      font-size: 18px;
-      margin: 10px;
-      border-radius: 10px;
+    #player-hand, #opponent-hand {
+      display: flex;
+      justify-content: center;
+      margin: 12px 0;
+      min-height: 80px;
+    }
+    .card {
+      width: 44px;
+      height: 64px;
+      margin: 0 4px;
+      border: 2px solid #333;
+      border-radius: 8px;
+      background: white;
+      font-size: 2em;
+      line-height: 64px;
+      text-align: center;
+      box-shadow: 2px 2px 8px #0003;
       cursor: pointer;
-      background: #ff4757;
-      color: white;
-      border: none;
+      transition: transform 0.1s;
+      user-select: none;
+    }
+    .card.red { background: #eb2227; color: #fff; }
+    .card.green { background: #2eb635; color: #fff; }
+    .card.blue { background: #1688da; color: #fff; }
+    .card.yellow { background: #f8cf48; color: #444; }
+    .card.wild { background: linear-gradient(135deg, #ff3232, #32ff32, #32cfff, #fff232); color: #111; font-size: 1em; }
+    .back { background: #111; color: #111; }
+    #discard-pile {
+      margin: 20px;
+      text-align: center;
+    }
+    #draw-card {
+      padding: 12px 20px;
+      font-size: 18px;
+      background: #fff;
+      border-radius: 12px;
+      border: 2px solid #333;
+      cursor: pointer;
+      margin-top: 16px;
+    }
+    #message {
+      margin: 12px 0;
+      min-height: 32px;
       font-weight: bold;
-      transition: background 0.3s;
-    }
-
-    button:hover {
-      background: #e84118;
-    }
-
-    #status {
-      font-size: 20px;
-      margin-top: 15px;
-      color: #f39c12;
-      text-shadow: 1px 1px 3px black;
+      color: #282d35;
     }
   </style>
 </head>
 <body>
-  <h1>🎮 UNO GAME</h1>
+  <h1>UNO Game</h1>
   <div id="game">
-    <h2>Discard Pile</h2>
-    <div id="discardPile"></div>
-    
-    <h2>Your Hand</h2>
-    <div id="playerHand"></div>
-    
-    <button onclick="drawCard('player')">Draw Card</button>
-    
-    <h2>Computer</h2>
-    <div id="computerHand"></div>
-    
-    <p id="status"></p>
+    <div><strong>Bot</strong></div>
+    <div id="opponent-hand"></div>
+    <div id="discard-pile"></div>
+    <div><strong>You</strong></div>
+    <div id="player-hand"></div>
+    <button id="draw-card">Draw Card</button>
+    <div id="message"></div>
   </div>
-
   <script>
-    const colors = ["red","yellow","green","blue"];
-    const values = ["0","1","2","3","4","5","6","7","8","9","Skip","Reverse","Draw Two"];
-    const wilds = ["Wild","Wild Draw Four"];
-    
-    let deck = [];
-    let playerHand = [];
-    let computerHand = [];
-    let discardPile = [];
-    let currentPlayer = "player";
-    let direction = 1;
+    const colors = ['red', 'green', 'yellow', 'blue'];
+    const values = ['0','1','2','3','4','5','6','7','8','9','skip','reverse','draw2'];
 
-    function createDeck() {
-      deck = [];
-      for (let c of colors) {
-        for (let v of values) {
-          deck.push({color:c, value:v});
-          if (v !== "0") deck.push({color:c, value:v});
+    function makeDeck() {
+      let deck = [];
+      for (let color of colors) {
+        for (let value of values) {
+          deck.push({ color, value });
+          if (value !== '0') deck.push({ color, value });
         }
       }
-      for (let i=0;i<4;i++) {
-        for (let w of wilds) {
-          deck.push({color:"black", value:w});
-        }
-      }
-      shuffle(deck);
+      // Add wilds
+      for (let i = 0; i < 4; i++) deck.push({ color: 'wild', value: 'wild' });
+      for (let i = 0; i < 4; i++) deck.push({ color: 'wild', value: 'draw4' });
+      return deck.sort(() => Math.random() - 0.5);
     }
 
-    function shuffle(array) {
-      for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
+    let deck, playerHand, opponentHand, discardPile, currentColor, currentValue, playerTurn;
+
+    function drawCard(hand, n = 1) {
+      for (let i = 0; i < n; i++) {
+        if (deck.length === 0) {
+          deck = discardPile.splice(0, discardPile.length - 1).sort(() => Math.random() - 0.5);
+        }
+        if (deck.length > 0) hand.push(deck.pop());
       }
     }
 
     function startGame() {
-      createDeck();
-      playerHand = deck.splice(0,7);
-      computerHand = deck.splice(0,7);
-      discardPile = [deck.pop()];
-      if (discardPile[0].color === "black") discardPile.color = colors[Math.floor(Math.random()*4)];
+      deck = makeDeck();
+      playerHand = [];
+      opponentHand = [];
+      discardPile = [];
+      drawCard(playerHand, 7);
+      drawCard(opponentHand, 7);
+      let first = deck.pop();
+      while (first.color === 'wild') deck.unshift(first), first = deck.pop();
+      discardPile.push(first);
+      currentColor = first.color;
+      currentValue = first.value;
+      playerTurn = true;
       render();
+      document.getElementById('message').textContent = "Your turn";
+    }
+
+    function playable(card) {
+      return (
+        card.color === currentColor ||
+        card.value === currentValue ||
+        card.color === 'wild'
+      );
+    }
+
+    function playCard(hand, idx) {
+      const card = hand[idx];
+      if (!playable(card)) return;
+      hand.splice(idx, 1);
+      discardPile.push(card);
+
+      // Select color for wild if needed
+      if (card.color === 'wild') {
+        let color = prompt("Choose color: red, green, yellow, blue", "red");
+        if (!colors.includes(color)) color = colors[Math.floor(Math.random() * 4)];
+        currentColor = color;
+      } else {
+        currentColor = card.color;
+      }
+      currentValue = card.value;
+
+      if (card.value === 'draw2') {
+        drawCard(playerTurn ? opponentHand : playerHand, 2);
+      }
+      if (card.value === 'draw4') {
+        drawCard(playerTurn ? opponentHand : playerHand, 4);
+      }
+      if (card.value === 'skip' || card.value === 'reverse') {
+        // Skip turn
+        playerTurn = playerTurn;
+        render();
+        if (checkWin()) return;
+        document.getElementById('message').textContent = playerTurn ? "Your turn (Bot skipped)" : "Bot's turn (You skipped)";
+        if (!playerTurn) setTimeout(botMove, 900);
+        return;
+      }
+      playerTurn = !playerTurn;
+      render();
+      if (!playerTurn) {
+        document.getElementById('message').textContent = "Bot's turn...";
+        setTimeout(botMove, 1200);
+      }
     }
 
     function render() {
-      document.getElementById("playerHand").innerHTML = "";
-      playerHand.forEach((card, idx) => {
-        let el = document.createElement("div");
-        el.className = "card " + card.color;
-        el.innerText = card.value;
-        el.onclick = () => playCard("player", idx);
-        document.getElementById("playerHand").appendChild(el);
+      // Opponent
+      const oh = document.getElementById('opponent-hand');
+      oh.innerHTML = '';
+      for (let i = 0; i < opponentHand.length; ++i)
+        oh.innerHTML += `<div class="card back"></div>`;
+      // Discard
+      const dp = discardPile[discardPile.length - 1];
+      let discardText = dp.value === 'draw2' ? '+2'
+                      : dp.value === 'draw4' ? '+4'
+                      : dp.value.toUpperCase();
+      document.getElementById('discard-pile').innerHTML =
+        `<div class="card ${dp.color}">${discardText}</div>`;
+      // Player
+      const ph = document.getElementById('player-hand');
+      ph.innerHTML = '';
+      playerHand.forEach((c, i) => {
+        let text = c.value === 'draw2' ? '+2'
+                 : c.value === 'draw4' ? '+4'
+                 : c.value.toUpperCase();
+        ph.innerHTML += `<div class="card ${c.color}" onclick="handClick(${i})">${text}</div>`;
       });
-      
-      document.getElementById("computerHand").innerText = "Cards: "+computerHand.length;
-      
-      let discardDiv = document.getElementById("discardPile");
-      discardDiv.innerHTML = "";
-      let top = discardPile[discardPile.length-1];
-      let dEl = document.createElement("div");
-      dEl.className="card " + top.color;
-      dEl.innerText= top.value;
-      discardDiv.appendChild(dEl);
     }
 
-    function playCard(player, idx) {
-      if (currentPlayer !== player) return;
-      let hand = (player==="player"?playerHand:computerHand);
-      let card = hand[idx];
-      let top = discardPile[discardPile.length-1];
-      if (
-        card.color===top.color || 
-        card.value===top.value || 
-        card.color==="black"
-      ) {
-        discardPile.push(card);
-        hand.splice(idx,1);
+    window.handClick = function(idx) {
+      if (!playerTurn) return;
+      if (!playable(playerHand[idx])) {
+        document.getElementById('message').textContent = "Can't play that card!";
+        return;
+      }
+      playCard(playerHand, idx);
+      if (checkWin()) return;
+      if (!playerTurn) document.getElementById('message').textContent = "Bot's turn...";
+    };
 
-        if (card.color==="black" && player==="player") {
-          let chosen = prompt("Pick a color (red, yellow, green, blue):");
-          if (colors.includes(chosen)) discardPile[discardPile.length-1].color = chosen;
-        } else if (card.color==="black" && player==="computer") {
-          discardPile[discardPile.length-1].color = colors[Math.floor(Math.random()*4)];
-        }
+    document.getElementById('draw-card').onclick = function() {
+      if (!playerTurn) return;
+      drawCard(playerHand, 1);
+      playerTurn = false;
+      render();
+      setTimeout(botMove, 900);
+    };
 
-        applyAction(card, player);
-
-        if (hand.length===0) {
-          document.getElementById("status").innerText = (player==="player"?"🎉 You win!":"💻 Computer wins!");
+    function botMove() {
+      if (playerTurn) return;
+      // Play first matching card
+      for (let i = 0; i < opponentHand.length; ++i) {
+        if (playable(opponentHand[i])) {
+          playCard(opponentHand, i);
+          if (checkWin()) return;
+          playerTurn = true;
+          render();
+          document.getElementById('message').textContent = "Your turn";
           return;
         }
-        if (currentPlayer==="computer") computerTurn();
-      } else {
-        document.getElementById("status").innerText = "❌ Invalid move!";
       }
+      // Else, draw
+      drawCard(opponentHand, 1);
+      playerTurn = true;
       render();
+      document.getElementById('message').textContent = "Your turn (Bot drew a card)";
     }
 
-    function applyAction(card, player) {
-      if (card.value==="Skip") {
-        currentPlayer = (player==="player"?"player":"computer");
-      } else if (card.value==="Reverse") {
-        direction*=-1; 
-      } else if (card.value==="Draw Two") {
-        drawCard(player==="player"?"computer":"player",2);
-      } else if (card.value==="Wild Draw Four") {
-        drawCard(player==="player"?"computer":"player",4);
+    function checkWin() {
+      if (playerHand.length === 0) {
+        document.getElementById('message').textContent = "You Win!";
+        setTimeout(startGame, 2500);
+        return true;
       }
-      currentPlayer = (player==="player"?"computer":"player");
-    }
-
-    function drawCard(player, n=1) {
-      let hand = (player==="player"?playerHand:computerHand);
-      for (let i=0;i<n;i++) {
-        if (deck.length===0) {
-          let top = discardPile.pop();
-          deck = discardPile;
-          shuffle(deck);
-          discardPile=[top];
-        }
-        if (deck.length>0) hand.push(deck.pop());
+      if (opponentHand.length === 0) {
+        document.getElementById('message').textContent = "Bot Wins!";
+        setTimeout(startGame, 2500);
+        return true;
       }
-      render();
-      return hand;
-    }
-
-    function computerTurn() {
-      setTimeout(()=>{
-        let playable = computerHand.findIndex(c=>{
-          let top=discardPile[discardPile.length-1];
-          return c.color==="black" || c.color===top.color || c.value===top.value;
-        });
-        if (playable>=0) {
-          playCard("computer", playable);
-        } else {
-          drawCard("computer");
-          currentPlayer="player";
-        }
-        render();
-      }, 1000);
+      return false;
     }
 
     startGame();
