@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>UNO Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: #2b2b2b;
+      color: white;
+    }
+    #game {
+      margin-top: 20px;
+    }
+    .card {
+      display: inline-block;
+      padding: 10px 15px;
+      margin: 5px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      border: 2px solid white;
+    }
+    .red { background: #e74c3c; }
+    .yellow { background: #f1c40f; color: black; }
+    .green { background: #2ecc71; }
+    .blue { background: #3498db; }
+    #playerHand, #computerHand {
+      margin: 20px;
+    }
+    #discardPile {
+      margin: 20px;
+      padding: 20px;
+      border: 2px dashed white;
+      display: inline-block;
+      min-width: 80px;
+    }
+  </style>
+</head>
+<body>
+  <h1>UNO Game (Simplified)</h1>
+  <div id="game">
+    <h2>Discard Pile</h2>
+    <div id="discardPile"></div>
+    
+    <h2>Your Hand</h2>
+    <div id="playerHand"></div>
+    
+    <button onclick="drawCard('player')">Draw Card</button>
+    
+    <h2>Computer</h2>
+    <div id="computerHand"></div>
+    
+    <p id="status"></p>
+  </div>
+
+  <script>
+    const colors = ["red","yellow","green","blue"];
+    const values = ["0","1","2","3","4","5","6","7","8","9"];
+    
+    let deck = [];
+    let playerHand = [];
+    let computerHand = [];
+    let discardPile = [];
+    let currentPlayer = "player";
+
+    function createDeck() {
+      deck = [];
+      for (let c of colors) {
+        for (let v of values) {
+          deck.push({color:c, value:v});
+          if (v !== "0") deck.push({color:c, value:v}); // 2 of each except 0
+        }
+      }
+      shuffle(deck);
+    }
+
+    function shuffle(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    function startGame() {
+      createDeck();
+      playerHand = deck.splice(0,7);
+      computerHand = deck.splice(0,7);
+      discardPile = [deck.pop()];
+      render();
+    }
+
+    function render() {
+      const playerDiv = document.getElementById("playerHand");
+      const compDiv = document.getElementById("computerHand");
+      const discardDiv = document.getElementById("discardPile");
+      
+      playerDiv.innerHTML = "";
+      playerHand.forEach((card, idx) => {
+        let el = document.createElement("div");
+        el.className = "card " + card.color;
+        el.innerText = card.value;
+        el.onclick = () => playCard("player", idx);
+        playerDiv.appendChild(el);
+      });
+      
+      compDiv.innerHTML = "Cards: " + computerHand.length;
+      
+      discardDiv.innerHTML = "";
+      let top = discardPile[discardPile.length-1];
+      let dEl = document.createElement("div");
+      dEl.className="card " + top.color;
+      dEl.innerText= top.value;
+      discardDiv.appendChild(dEl);
+    }
+
+    function playCard(player, idx) {
+      if (currentPlayer !== player) return;
+      let hand = (player==="player"?playerHand:computerHand);
+      let card = hand[idx];
+      let top = discardPile[discardPile.length-1];
+      
+      if (card.color === top.color || card.value === top.value) {
+        discardPile.push(card);
+        hand.splice(idx,1);
+        if (hand.length===0) {
+          document.getElementById("status").innerText = (player==="player"?"You win!":"Computer wins!");
+        } else {
+          currentPlayer = (player==="player"?"computer":"player");
+          if (currentPlayer==="computer") computerTurn();
+        }
+      } else {
+        document.getElementById("status").innerText = "Invalid move!";
+      }
+      render();
+    }
+
+    function drawCard(player) {
+      if (deck.length===0) {
+        let top = discardPile.pop();
+        deck = discardPile;
+        shuffle(deck);
+        discardPile=[top];
+      }
+      let hand = (player==="player"?playerHand:computerHand);
+      if (deck.length>0) hand.push(deck.pop());
+      render();
+    }
+
+    function computerTurn() {
+      setTimeout(()=>{
+        let played = false;
+        for(let i=0;i<computerHand.length;i++) {
+          let card = computerHand[i];
+          let top = discardPile[discardPile.length-1];
+          if (card.color===top.color || card.value===top.value) {
+            playCard("computer", i);
+            played = true;
+            break;
+          }
+        }
+        if (!played) {
+          drawCard("computer");
+          currentPlayer="player";
+        }
+        render();
+      }, 1000);
+    }
+
+    startGame();
+  </script>
+</body>
+</html>
